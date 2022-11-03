@@ -1,10 +1,12 @@
 /* globals describe, it */
 import { fromHex, fromString } from '../src/bytes.js'
 import { sha256, sha512 } from '../src/hashes/sha2.js'
+import { keccak256 } from '../src/hashes/keccak256.js'
 import { identity } from '../src/hashes/identity.js'
 import { decode as decodeDigest, create as createDigest } from '../src/hashes/digest.js'
 import valid from './fixtures/valid-multihash.js'
 import invalid from './fixtures/invalid-multihash.js'
+import { keccak256 as slkeccak256 } from "ethereum-cryptography/keccak"
 import { hash as slSha256 } from '@stablelib/sha256'
 import { hash as slSha512 } from '@stablelib/sha512'
 import { assert } from 'aegir/chai'
@@ -75,6 +77,16 @@ describe('multihash', () => {
       assert.deepStrictEqual(hash2.bytes, hash.bytes)
     })
 
+    it('hash keccak-256', async() => {
+      const hash = await keccak256.digest(fromString('test'))
+      assert.deepStrictEqual(hash.code, keccak256.code)
+      assert.deepStrictEqual(hash.digest, slkeccak256(fromString('test')))
+
+      const hash2 = decodeDigest(hash.bytes)
+      assert.deepStrictEqual(hash2.code, keccak256.code)
+      assert.deepStrictEqual(hash2.bytes, hash.bytes)
+    })
+
     it('hash identity async', async () => {
       const hash = await identity.digest(fromString('test'))
       assert.deepStrictEqual(hash.code, identity.code)
@@ -97,6 +109,7 @@ describe('multihash', () => {
       assert.deepStrictEqual(hash2.bytes, hash.bytes)
     })
   })
+
   describe('decode', () => {
     for (const { encoding, hex, size } of valid) {
       it(`valid fixture ${hex}`, () => {
